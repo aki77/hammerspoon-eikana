@@ -18,10 +18,12 @@
 ## 導入
 
 ```bash
-git clone https://github.com/aki77/hammerspoon-eikana.git
-cd hammerspoon-eikana
-bash install.sh
+curl -fsSL https://raw.githubusercontent.com/aki77/hammerspoon-eikana/main/install.sh | bash
 ```
+
+パイプで実行すると、`Eikana.spoon` を GitHub の tarball から一時ディレクトリに取ってきて使う
+（取得するブランチやタグは `EIKANA_REF` で変えられる。既定は `main`）。
+clone 済みなら `bash install.sh` でも同じように入る（手元の `Eikana.spoon` を使う）。
 
 `install.sh` は冪等で、Hammerspoon の導入、`~/.hammerspoon/Spoons/Eikana.spoon` へのコピー（symlink ではなくコピー）、
 `~/.hammerspoon/init.lua` への `hs.loadSpoon("Eikana"):start()` の生成/追記を行う。

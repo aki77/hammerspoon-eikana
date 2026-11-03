@@ -2,15 +2,35 @@
 #
 # install.sh
 #
-# Hammerspoon と Eikana.spoon を導入する。冪等（2 回目は案内以外を出力しない）。
+# Hammerspoon と Eikana.spoon を導入する。冪等（2 回目は取得と案内以外を出力しない）。
 #   1. Hammerspoon cask が無ければ brew install --cask hammerspoon
 #   2. Eikana.spoon を ~/.hammerspoon/Spoons/ へコピー（差分があるときだけ）
 #   3. ~/.hammerspoon/init.lua に hs.loadSpoon("Eikana"):start() を生成/追記
 #   4. アクセシビリティ権限と再起動の案内
+#
+# clone せずに導入する場合（Eikana.spoon は GitHub の tarball から取得する）:
+#   curl -fsSL https://raw.githubusercontent.com/aki77/hammerspoon-eikana/main/install.sh | bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-SPOON_SRC="$SCRIPT_DIR/Eikana.spoon"
+# 途中までしか届かなかったスクリプトが実行されないよう、全体を main に包んで最後に呼ぶ。
+main() {
+
+REPO="aki77/hammerspoon-eikana"
+REF="${EIKANA_REF:-main}"
+
+# パイプ実行（curl | bash）では BASH_SOURCE が空になり、隣に Eikana.spoon が無い。
+if [ -n "${BASH_SOURCE[0]:-}" ] && [ -f "${BASH_SOURCE[0]}" ]; then
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  SPOON_SRC="$SCRIPT_DIR/Eikana.spoon"
+else
+  DOWNLOAD_DIR="$(mktemp -d)"
+  trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+  echo "==> ${REPO} (${REF}) を取得します"
+  curl -fsSL "https://github.com/${REPO}/archive/${REF}.tar.gz" \
+    | tar -xz -C "$DOWNLOAD_DIR" --strip-components=1
+  SPOON_SRC="$DOWNLOAD_DIR/Eikana.spoon"
+fi
+
 HS_DIR="$HOME/.hammerspoon"
 SPOONS_DIR="$HS_DIR/Spoons"
 SPOON_DST="$SPOONS_DIR/Eikana.spoon"
@@ -96,3 +116,7 @@ echo "  2. システム設定 > プライバシーとセキュリティ > アク
 echo "  3. Hammerspoon を Quit して起動し直す（許可だけでは eventtap が動きません）"
 echo "     既に起動中で設定だけ変えた場合はメニューバーの Reload Config"
 echo "ログイン時の自動起動は Hammerspoon の Preferences で Launch at login を有効にしてください"
+
+}
+
+main "$@"
